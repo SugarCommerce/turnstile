@@ -1,0 +1,63 @@
+{
+    "name": "sugarcommerce/turnstile",
+    "version": "1.0.0",
+    "description": "Server-side verification of Cloudflare Turnstile tokens that fails closed: no secret, no answer, a slow answer or an unreadable one is a refusal, and a token minted for another site, another form or too long ago is refused too.",
+    "type": "library",
+    "license": "GPL-2.0-or-later",
+    "homepage": "https://github.com/sugarcommerce/turnstile",
+    "authors": [
+        {
+            "name": "David Sherlock",
+            "homepage": "https://arraypress.com/"
+        }
+    ],
+    "keywords": [
+        "turnstile",
+        "cloudflare",
+        "captcha",
+        "siteverify",
+        "bot-protection",
+        "forms",
+        "security"
+    ],
+    "require": {
+        "php": ">=8.5",
+        "sugarcommerce/http-client": "^1.2"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^13.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "SugarCommerce\\Turnstile\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "SugarCommerce\\Turnstile\\Tests\\": "tests/"
+        }
+    },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../*",
+            "options": {
+                "symlink": true
+            }
+        }
+    ],
+    "scripts": {
+        "test": "phpunit"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true,
+        "preferred-install": "dist"
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "support": {
+        "issues": "https://github.com/sugarcommerce/turnstile/issues",
+        "source": "https://github.com/sugarcommerce/turnstile"
+    }
+}
