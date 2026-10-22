@@ -20,7 +20,8 @@ The widget on the page proves nothing by itself. It puts a token in the form, an
 - 🌐 **Hostname, action and age** — `for_hostnames()`, `for_action()` and `within()`, each a copy, so one configured instance serves every form.
 - ⏱️ **A five-second timeout** — a visitor is waiting on the form, and a refusal is the answer when it runs out.
 - 🧪 **`is_test_secret()`** — so an application can refuse to boot with Cloudflare's always-pass key outside development.
-- 🔐 **Secret and token kept out of stack traces** with `#[\SensitiveParameter]`.
+- 🔐 **Secret and token kept out of stack traces** with `#[\SensitiveParameter]`, and the secret out of `var_dump()` and `print_r()`.
+- 📏 **Answers read to 64 KiB at most** — siteverify sends a few hundred bytes; anything longer is refused, not buffered.
 
 ## Requirements
 
@@ -132,7 +133,7 @@ Cloudflare publishes keys that always give the same answer, for development and 
 | `2x0000000000000000000000000000000AA` | Always fails |
 | `3x0000000000000000000000000000000AA` | Fails with `timeout-or-duplicate` — "already spent" |
 
-Test widgets produce the dummy token `XXXX.DUMMY.TOKEN.XXXX`, which test secrets accept and real secrets refuse. Test secrets answer with a placeholder hostname rather than yours, so leave `for_hostnames()` off while using them.
+Test widgets produce the dummy token `XXXX.DUMMY.TOKEN.XXXX`, which test secrets accept and real secrets refuse. Test sitekeys work on any domain, `localhost` included. Cloudflare does not document which `hostname` (or `action`) a test secret's answer carries — the sample answer in its docs shows `localhost`, which need not be yours — so don't count on `for_hostnames()` or `for_action()` matching while using test keys: leave them off in that environment, or name what the answer actually says.
 
 An always-pass secret in production is the check switched off. Refuse it:
 
@@ -159,7 +160,7 @@ composer install
 composer test
 ```
 
-85 tests, all against `HttpClient\Fake` — nothing reaches Cloudflare. A token passing with every field read; the form posted; an address that is not one left out; every way of failing closed — no secret, no token, an oversized token, unreachable, timed out, non-200, not JSON, `success` that is not literally `true`, `success:false`; Cloudflare's error codes named, unknown ones included; hostname, action and age enforcement, with undated and slightly-future challenges; Cloudflare's test secrets; and `#[\SensitiveParameter]` and `#[\NoDiscard]` where they belong.
+91 tests, all against `HttpClient\Fake` — nothing reaches Cloudflare. A token passing with every field read; the form posted; an address that is not one left out; every way of failing closed — no secret, no token, an oversized token, unreachable, timed out, non-200, not JSON, `success` that is not literally `true`, a JSON list, an answer too long to read, `success:false`; Cloudflare's error codes named, unknown ones included; hostname, action and age enforcement, with undated and slightly-future challenges; Cloudflare's test secrets; a secret kept out of dumps; and `#[\SensitiveParameter]` and `#[\NoDiscard]` where they belong.
 
 ## License
 

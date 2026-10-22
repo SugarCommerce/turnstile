@@ -168,6 +168,9 @@ final class TurnstileTest extends TestCase {
 			'success as a string'     => array( self::answer( array( 'success' => 'true' ) ), Reason::Unreadable ),
 			'success as a number'     => array( self::answer( array( 'success' => 1 ) ), Reason::Unreadable ),
 			'success false'           => array( self::answer( array( 'success' => false, 'error-codes' => array( 'invalid-input-response' ) ) ), Reason::Rejected ),
+			'a json list'             => array( new Response( true, 200, '[true]' ), Reason::Unreadable ),
+			'success nested'          => array( self::answer( array( 'success' => array( true ) ) ), Reason::Unreadable ),
+			'200 but too long to read' => array( new Response( false, 200, error: 'response exceeds size limit' ), Reason::Unreadable ),
 		);
 	}
 
@@ -342,6 +345,28 @@ final class TurnstileTest extends TestCase {
 		$http = Fake::strict()->on( 'POST', '*', self::answer( array( 'success' => false, 'hostname' => 'phish.example.net', 'error-codes' => array( 'timeout-or-duplicate' ) ) ) );
 
 		$this->assertSame( Reason::Rejected, self::turnstile( $http )->for_hostnames( 'shop.example.com' )->verify( self::TOKEN )->reason );
+	}
+
+	public function test_a_hostname_that_is_not_a_string_is_refused(): void {
+		$http   = Fake::strict()->on( 'POST', Turnstile::ENDPOINT, self::passed( array( 'hostname' => array( 'shop.example.com' ) ) ) );
+		$result = self::turnstile( $http )->for_hostnames( 'shop.example.com' )->verify( self::TOKEN );
+
+		$this->assertSame( Reason::WrongHostname, $result->reason );
+		$this->assertSame( '', $result->hostname );
+	}
+
+	/* ─── Secrets ───────────────────────────────────────────────────── */
+
+	public function test_dumping_it_does_not_print_the_secret(): void {
+		$dump = print_r( self::turnstile( Fake::strict() ), true );
+
+		$this->assertStringNotContainsString( self::SECRET, $dump );
+		$this->assertStringContainsString( '[redacted]', $dump );
+	}
+
+	public function test_the_answer_read_is_bounded(): void {
+		$this->assertLessThanOrEqual( 65536, Turnstile::MAX_ANSWER );
+		$this->assertGreaterThanOrEqual( 4096, Turnstile::MAX_ANSWER );
 	}
 
 	/* ─── Timeout ───────────────────────────────────────────────────── */

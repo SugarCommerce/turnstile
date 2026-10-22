@@ -38,8 +38,7 @@ enum ErrorCode: string {
 	case MissingInputSecret = 'missing-input-secret';
 
 	/**
-	 * The secret is wrong, does not exist, or is a test secret given a
-	 * real token.
+	 * The secret is wrong, does not exist, or has expired.
 	 */
 	case InvalidInputSecret = 'invalid-input-secret';
 

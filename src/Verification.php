@@ -30,7 +30,7 @@ final readonly class Verification {
 	/**
 	 * @param bool                    $success       Whether the token is accepted.
 	 * @param Reason|null             $reason        Why not; null when it is.
-	 * @param string[]                $codes         Cloudflare's `error-codes`, as sent.
+	 * @param list<string>            $codes         Cloudflare's `error-codes`, as sent.
 	 * @param string                  $hostname      Where the widget was rendered.
 	 * @param string                  $action        The widget's `data-action`.
 	 * @param string                  $cdata         The widget's `data-cdata`.
@@ -68,7 +68,9 @@ final readonly class Verification {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param array<string, mixed> $body The decoded answer.
+	 * @param array<mixed> $body The decoded answer, as JSON gave it: any
+	 *                          keys, any values, read as nothing when
+	 *                          they are not what siteverify sends.
 	 *
 	 * @return self
 	 */
@@ -108,7 +110,7 @@ final readonly class Verification {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @return ErrorCode[]
+	 * @return list<ErrorCode>
 	 */
 	public function errors(): array {
 		return array_map( ErrorCode::from_cloudflare( ... ), $this->codes );

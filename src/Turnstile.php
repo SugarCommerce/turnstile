@@ -72,18 +72,26 @@ final readonly class Turnstile {
 	public const int TIMEOUT = 5;
 
 	/**
+	 * The most of an answer that is read, in bytes.
+	 *
+	 * A siteverify answer is a few hundred bytes. Anything that runs past
+	 * this is not one, and is refused rather than read into memory.
+	 */
+	public const int MAX_ANSWER = 65536;
+
+	/**
 	 * Lower-cased hostnames a token may come from. Empty for any.
 	 *
-	 * @var string[]
+	 * @var list<string>
 	 */
 	private array $hostnames;
 
 	/**
 	 * @since 1.0.0
 	 *
-	 * @param string   $secret    The widget's secret key.
-	 * @param Http     $http      HTTP client. Substitute `HttpClient\Fake` in tests.
-	 * @param string[] $hostnames Hostnames a token may come from. Empty for any.
+	 * @param string        $secret    The widget's secret key.
+	 * @param Http          $http      HTTP client. Substitute `HttpClient\Fake` in tests.
+	 * @param array<string> $hostnames Hostnames a token may come from. Empty for any.
 	 * @param string   $action    The `data-action` a token must carry. '' for any.
 	 * @param int      $max_age   Seconds since the challenge was solved. 0 leaves
 	 *                            it to Cloudflare, which allows five minutes.
@@ -100,6 +108,26 @@ final readonly class Turnstile {
 		private ?int $timestamp = null,
 	) {
 		$this->hostnames = self::hostnames( $hostnames );
+	}
+
+	/**
+	 * Keep the secret out of `var_dump()` and `print_r()`.
+	 *
+	 * #[\SensitiveParameter] keeps it out of a stack trace; a dumped
+	 * object, pasted into a log or a bug report, would print it anyway.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return array{secret: string, hostnames: list<string>, action: string, max_age: int, timeout: int}
+	 */
+	public function __debugInfo(): array {
+		return array(
+			'secret'    => '' === $this->secret ? '' : '[redacted]',
+			'hostnames' => $this->hostnames,
+			'action'    => $this->action,
+			'max_age'   => $this->max_age,
+			'timeout'   => $this->timeout,
+		);
 	}
 
 	/**
@@ -189,7 +217,7 @@ final readonly class Turnstile {
 			return Verification::unanswered( Reason::TokenTooLong );
 		}
 
-		$response = $this->http->with_timeout( max( 1, $this->timeout ) )->post(
+		$response = $this->http->with_timeout( max( 1, $this->timeout ) )->with_max_bytes( self::MAX_ANSWER )->post(
 			self::ENDPOINT,
 			http_build_query( array_filter( array(
 				'secret'          => $this->secret,
@@ -280,9 +308,9 @@ final readonly class Turnstile {
 	/**
 	 * Hostnames, trimmed and lower-cased, blanks dropped.
 	 *
-	 * @param array<int|string, string> $hostnames Hostnames.
+	 * @param array<string> $hostnames Hostnames.
 	 *
-	 * @return string[]
+	 * @return list<string>
 	 */
 	private static function hostnames( array $hostnames ): array {
 		return array_values( array_unique( array_filter(
