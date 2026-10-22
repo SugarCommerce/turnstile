@@ -390,6 +390,34 @@ final class TurnstileTest extends TestCase {
 		$this->assertFalse( Turnstile::is_test_secret( '' ) );
 	}
 
+	/**
+	 * @return array<string, array{string, bool, bool}>
+	 */
+	public static function prefixed_secrets(): array {
+		return array(
+			'published, always passes' => array( '1x0000000000000000000000000000000AA', true, true ),
+			'published, already spent' => array( '3x0000000000000000000000000000000AA', true, true ),
+			'1x, another shape'        => array( '1xABCDEF', false, true ),
+			'2x, another shape'        => array( '2x0000BB', false, true ),
+			'3x alone'                 => array( '3x', false, true ),
+			'a real secret'            => array( '0x4AAAAAAABkMYinukE8nzYS_6e1rRrDbQ', false, false ),
+			'upper-case X'             => array( '1X0000000000000000000000000000000AA', false, false ),
+			'4x'                       => array( '4x0000000000000000000000000000000AA', false, false ),
+			'1x not at the start'      => array( ' 1x0000', false, false ),
+			'empty'                    => array( '', false, false ),
+		);
+	}
+
+	#[DataProvider( 'prefixed_secrets' )]
+	public function test_any_prefix_counts_every_1x_2x_3x_secret( string $secret, bool $published, bool $prefixed ): void {
+		$this->assertSame( $published, Turnstile::is_test_secret( $secret ) );
+		$this->assertSame( $prefixed, Turnstile::is_test_secret( $secret, true ) );
+		$this->assertSame(
+			str_starts_with( $secret, '1x' ) || str_starts_with( $secret, '2x' ) || str_starts_with( $secret, '3x' ),
+			Turnstile::is_test_secret( $secret, any_prefix: true )
+		);
+	}
+
 	/* ─── Secrets stay out of stack traces ──────────────────────────── */
 
 	/**

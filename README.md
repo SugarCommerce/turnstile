@@ -143,6 +143,12 @@ if ( 'production' === $env && Turnstile::is_test_secret( $secret ) ) {
 }
 ```
 
+That matches the published secrets exactly. To refuse anything starting `1x`, `2x` or `3x` — a test key Cloudflare adds or reshapes later as well as today's; no real secret starts that way — pass `any_prefix` (1.1.0):
+
+```php
+Turnstile::is_test_secret( $secret, any_prefix: true );
+```
+
 In a test suite, nothing needs to reach Cloudflare at all — hand the constructor an `HttpClient\Fake`:
 
 ```php
@@ -160,7 +166,7 @@ composer install
 composer test
 ```
 
-91 tests, all against `HttpClient\Fake` — nothing reaches Cloudflare. A token passing with every field read; the form posted; an address that is not one left out; every way of failing closed — no secret, no token, an oversized token, unreachable, timed out, non-200, not JSON, `success` that is not literally `true`, a JSON list, an answer too long to read, `success:false`; Cloudflare's error codes named, unknown ones included; hostname, action and age enforcement, with undated and slightly-future challenges; Cloudflare's test secrets; a secret kept out of dumps; and `#[\SensitiveParameter]` and `#[\NoDiscard]` where they belong.
+101 tests, all against `HttpClient\Fake` — nothing reaches Cloudflare. A token passing with every field read; the form posted; an address that is not one left out; every way of failing closed — no secret, no token, an oversized token, unreachable, timed out, non-200, not JSON, `success` that is not literally `true`, a JSON list, an answer too long to read, `success:false`; Cloudflare's error codes named, unknown ones included; hostname, action and age enforcement, with undated and slightly-future challenges; Cloudflare's test secrets, exactly or by prefix; a secret kept out of dumps; and `#[\SensitiveParameter]` and `#[\NoDiscard]` where they belong.
 
 ## License
 

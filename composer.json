@@ -1,6 +1,6 @@
 {
     "name": "sugarcommerce/turnstile",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "Server-side verification of Cloudflare Turnstile tokens that fails closed: no secret, no answer, a slow answer or an unreadable one is a refusal, and a token minted for another site, another form or too long ago is refused too.",
     "type": "library",
     "license": "GPL-2.0-or-later",

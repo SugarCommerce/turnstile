@@ -268,14 +268,23 @@ final readonly class Turnstile {
 	 * "already spent"). One that reaches production turns the check off, so
 	 * an application can refuse to boot with one outside development.
 	 *
-	 * @since 1.0.0
+	 * By default only the published shape counts — `1x`, `2x` or `3x`, a run
+	 * of zeros, `AA`. `$any_prefix` (since 1.1.0) counts any secret starting
+	 * `1x`, `2x` or `3x`, for a boot check that would rather refuse a key
+	 * Cloudflare adds or reshapes later than let it through: no real secret
+	 * starts that way. Lower-case `x` only, as Cloudflare writes them.
 	 *
-	 * @param string $secret A secret key.
+	 * @since 1.0.0
+	 * @since 1.1.0 Takes `$any_prefix`.
+	 *
+	 * @param string $secret     A secret key.
+	 * @param bool   $any_prefix Count every `1x`/`2x`/`3x` secret, not only
+	 *                           the published ones.
 	 *
 	 * @return bool
 	 */
-	public static function is_test_secret( #[\SensitiveParameter] string $secret ): bool {
-		return 1 === preg_match( '/^[123]x0{20,}AA$/D', $secret );
+	public static function is_test_secret( #[\SensitiveParameter] string $secret, bool $any_prefix = false ): bool {
+		return 1 === preg_match( $any_prefix ? '/^[123]x/' : '/^[123]x0{20,}AA$/D', $secret );
 	}
 
 	/**
